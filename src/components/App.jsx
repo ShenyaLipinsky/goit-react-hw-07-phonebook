@@ -3,10 +3,10 @@ import { ContactForm } from './Phonebook/Phonebook';
 import { Contacts } from './Contacts/Contacts';
 import { Filter } from './Filter/Filter';
 import { useSelector } from 'react-redux';
-import { getContacts, getFilter } from 'redux/contactsSlice';
-
+import { getFilter } from 'redux/contactsSlice';
+import { useGetContactsQuery } from 'redux/contactsSlice';
 export const App = () => {
-  let contacts = useSelector(getContacts);
+  const { data: contacts } = useGetContactsQuery();
   let filter = useSelector(getFilter);
 
   return (
@@ -23,8 +23,8 @@ export const App = () => {
       bg={'secondary'}
     >
       <h1>PhoneBook</h1>
-      <ContactForm></ContactForm>
-      {contacts.length > 0 && (
+      <ContactForm />
+      {contacts && (
         <>
           <h2>Contacts</h2>
           <Filter title="Find contacts by name" value={filter} />

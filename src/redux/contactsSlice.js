@@ -1,44 +1,57 @@
-import { createSlice } from '@reduxjs/toolkit';
-import persistReducer from 'redux-persist/es/persistReducer';
-import storage from 'redux-persist/lib/storage';
+import { createReducer, createSlice } from '@reduxjs/toolkit';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 const initialState = {
-  items: [],
   filter: '',
 };
 
 const contactsSlice = createSlice({
-  name: 'contacts',
+  name: 'filter',
   initialState,
   reducers: {
-    addContact: (state, action) => {
-      state.items.push(action.payload);
-    },
-    removeContact: (state, action) => {
-      state.items = state.items.filter(el => el.id !== action.payload);
-    },
     filter: (state, action) => {
       state.filter = action.payload;
     },
   },
 });
+export const { filter } = contactsSlice.actions;
+export const filterReducer = createReducer('', {
+  [filter.type]: (_state, { payload }) => payload,
+});
 
-const persistConfig = {
-  key: 'contacts',
-  storage,
-  blacklist: ['filter'],
-};
+export const contactsApi = createApi({
+  reducerPath: 'contactsApi',
+  baseQuery: fetchBaseQuery({
+    baseUrl: 'https://62f742c673b79d015355cbb0.mockapi.io',
+  }),
+  tagTypes: ['Contacts'],
+  endpoints: builder => ({
+    getContacts: builder.query({
+      query: () => `/contacts`,
+      providesTags: ['Contacts'],
+    }),
+    addContact: builder.mutation({
+      query: values => ({
+        url: `/contacts`,
+        method: 'POST',
+        body: values,
+      }),
+      invalidatesTags: ['Contacts'],
+    }),
+    removeContact: builder.mutation({
+      query: id => ({
+        url: `/contacts/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Contacts'],
+    }),
+  }),
+});
 
-export const contactsReducer = persistReducer(
-  persistConfig,
-  contactsSlice.reducer
-);
+export const {
+  useGetContactsQuery,
+  useAddContactMutation,
+  useRemoveContactMutation,
+} = contactsApi;
 
-export const { addContact, removeContact, filter } = contactsSlice.actions;
-
-// export default contactsSlice.reducer;
-
-// Selectors //
-
-export const getContacts = state => state.contacts.items;
-export const getFilter = state => state.contacts.filter;
+export const getFilter = state => state[filter];
